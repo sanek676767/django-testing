@@ -1,81 +1,49 @@
 from http import HTTPStatus
 
 import pytest
-from django.urls import reverse
 from pytest_django.asserts import assertRedirects
 
 
-pytestmark = pytest.mark.django_db
+ANONYMOUS_CLIENT = pytest.lazy_fixture('client')
+AUTHOR_CLIENT = pytest.lazy_fixture('author_client')
+READER_CLIENT = pytest.lazy_fixture('reader_client')
+
+HOME_URL = pytest.lazy_fixture('home_url')
+DETAIL_URL = pytest.lazy_fixture('detail_url')
+LOGIN_URL = pytest.lazy_fixture('login_url')
+SIGNUP_URL = pytest.lazy_fixture('signup_url')
+LOGOUT_URL = pytest.lazy_fixture('logout_url')
+EDIT_URL = pytest.lazy_fixture('edit_url')
+DELETE_URL = pytest.lazy_fixture('delete_url')
+
+STATUS_CASES = (
+    (ANONYMOUS_CLIENT, 'get', HOME_URL, HTTPStatus.OK),
+    (ANONYMOUS_CLIENT, 'get', DETAIL_URL, HTTPStatus.OK),
+    (ANONYMOUS_CLIENT, 'get', LOGIN_URL, HTTPStatus.OK),
+    (ANONYMOUS_CLIENT, 'get', SIGNUP_URL, HTTPStatus.OK),
+    (ANONYMOUS_CLIENT, 'post', LOGOUT_URL, HTTPStatus.OK),
+    (AUTHOR_CLIENT, 'get', EDIT_URL, HTTPStatus.OK),
+    (AUTHOR_CLIENT, 'get', DELETE_URL, HTTPStatus.OK),
+    (READER_CLIENT, 'get', EDIT_URL, HTTPStatus.NOT_FOUND),
+    (READER_CLIENT, 'get', DELETE_URL, HTTPStatus.NOT_FOUND),
+)
+
+REDIRECT_CASES = (
+    EDIT_URL,
+    DELETE_URL,
+)
 
 
 @pytest.mark.parametrize(
-    'url_name, object_fixture',
-    (
-        ('news:home', None),
-        ('news:detail', 'news'),
-    ),
+    'user_client, method, url, expected_status',
+    STATUS_CASES,
 )
-def test_pages_are_available_for_anonymous_user(
-    client,
-    request,
-    url_name,
-    object_fixture,
-):
-    kwargs = {}
-    if object_fixture is not None:
-        obj = request.getfixturevalue(object_fixture)
-        kwargs = {'pk': obj.pk}
-    response = client.get(reverse(url_name, kwargs=kwargs))
-    assert response.status_code == HTTPStatus.OK
+def test_status_codes(user_client, method, url, expected_status):
+    response = getattr(user_client, method)(url)
+    assert response.status_code == expected_status
 
 
-@pytest.mark.parametrize('url_fixture', ('edit_url', 'delete_url'))
-def test_comment_pages_are_available_for_author(
-    author_client,
-    request,
-    url_fixture,
-):
-    url = request.getfixturevalue(url_fixture)
-    response = author_client.get(url)
-    assert response.status_code == HTTPStatus.OK
-
-
-@pytest.mark.parametrize('url_fixture', ('edit_url', 'delete_url'))
-def test_anonymous_user_is_redirected_from_comment_pages(
-    client,
-    request,
-    url_fixture,
-):
-    url = request.getfixturevalue(url_fixture)
-    login_url = reverse('users:login')
+@pytest.mark.parametrize('url', REDIRECT_CASES)
+def test_redirects_to_login(client, login_url, url):
     response = client.get(url)
     assertRedirects(response, f'{login_url}?next={url}')
-
-
-@pytest.mark.parametrize('url_fixture', ('edit_url', 'delete_url'))
-def test_not_author_gets_404_for_comment_pages(
-    reader_client,
-    request,
-    url_fixture,
-):
-    url = request.getfixturevalue(url_fixture)
-    response = reader_client.get(url)
-    assert response.status_code == HTTPStatus.NOT_FOUND
-
-
-@pytest.mark.parametrize(
-    'url_name, method',
-    (
-        ('users:login', 'get'),
-        ('users:signup', 'get'),
-        ('users:logout', 'post'),
-    ),
-)
-def test_auth_pages_are_available_for_anonymous_user(
-    client,
-    url_name,
-    method,
-):
-    url = reverse(url_name)
-    response = getattr(client, method)(url)
-    assert response.status_code == HTTPStatus.OK
