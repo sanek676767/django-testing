@@ -46,7 +46,12 @@ def test_comment_with_bad_words_is_not_created(
     assert WARNING in response.context['form'].errors['text']
 
 
-def test_author_can_edit_own_comment(author_client, comment, edit_url, detail_url):
+def test_author_can_edit_own_comment(
+    author_client,
+    comment,
+    edit_url,
+    detail_url,
+):
     response = author_client.post(edit_url, data={'text': 'Обновлённый текст'})
     assertRedirects(response, f'{detail_url}#comments')
     comment.refresh_from_db()

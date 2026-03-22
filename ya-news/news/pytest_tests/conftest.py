@@ -61,4 +61,3 @@ def delete_url(comment):
 @pytest.fixture
 def form_data():
     return {'text': 'Новый комментарий'}
-

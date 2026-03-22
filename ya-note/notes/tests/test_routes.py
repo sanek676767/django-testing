@@ -91,4 +91,3 @@ class TestRoutes(TestCase):
                     response,
                     f'{self.login_url}?next={url}',
                 )
-

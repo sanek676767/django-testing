@@ -135,4 +135,3 @@ class TestNoteLogic(TestCase):
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
         self.assertEqual(Note.objects.count(), notes_count)
         self.assertTrue(Note.objects.filter(pk=self.note.pk).exists())
-

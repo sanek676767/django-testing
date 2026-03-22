@@ -79,4 +79,3 @@ def test_auth_pages_are_available_for_anonymous_user(
     url = reverse(url_name)
     response = getattr(client, method)(url)
     assert response.status_code == HTTPStatus.OK
-
