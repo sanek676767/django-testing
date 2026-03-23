@@ -99,13 +99,12 @@ def all_news():
         )
         for index in range(news_count)
     )
-    return News.objects.order_by('-date')
 
 
 @pytest.fixture
 def all_comments(author, news):
     now = timezone.now()
-    for index in range(3):
+    for index in range(10):
         comment = Comment.objects.create(
             news=news,
             author=author,
@@ -113,4 +112,3 @@ def all_comments(author, news):
         )
         comment.created = now + timedelta(minutes=index)
         comment.save(update_fields=('created',))
-    return Comment.objects.filter(news=news).order_by('created')

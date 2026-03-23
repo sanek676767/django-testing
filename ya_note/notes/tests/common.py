@@ -60,9 +60,3 @@ class BaseNoteTestCase(TestCase):
         cls.detail_url = get_detail_url(NOTE_SLUG)
         cls.edit_url = get_edit_url(NOTE_SLUG)
         cls.delete_url = get_delete_url(NOTE_SLUG)
-
-    def setUp(self):
-        self.author_client = Client()
-        self.author_client.force_login(self.author)
-        self.reader_client = Client()
-        self.reader_client.force_login(self.reader)
